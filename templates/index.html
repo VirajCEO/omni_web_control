@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omni Robot Script</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://unpkg.com/nipplejs@^0.9.1"></script>
+</head>
+<body>
+    <img src="{{ url_for('video_feed') }}" width="640" height="480">
+    <div class="container">
+        
+        <div id="joystick-container" class="mt-4"></div>
+        <p id="joystick-data" class="mt-2">Joystick Data: Not Active</p>
+
+        <div class="form-group mt-4">
+            <label for="valueSlider">Speed:</label>
+            <input type="range" class="form-control-range" id="valueSlider" orient="horizontal" min="1" max="100" step="1" value="50" oninput="updateSliderValue(this.value)">
+        </div>
+
+        <button class="btn btn-primary mt-3" onclick="runFunctionTwo()"><i class="bi bi-play"></i> Run Function Two</button>
+    </div>
+
+    <script>
+        // Initialize the joystick
+        const joystick = nipplejs.create({
+            zone: document.getElementById('joystick-container'),
+            mode: 'static',
+            position: { top: '50%', left: '50%' },
+            color: 'blue'
+        });
+
+        // Handle joystick events
+        joystick.on('move', (evt, data) => {
+            const joystickData = {
+                angle: data.angle.degree,
+                direction: data.direction.angle,
+                distance: data.distance
+            };
+
+            // Update the display
+            $('#joystick-data').text(`Joystick Data: ${JSON.stringify(joystickData)}`);
+
+            // Send live data to the server (you can modify this as needed)
+            $.ajax({
+                type: 'POST',
+                url: '/joystick_data',
+                contentType: 'application/json;charset=UTF-8',
+                data: JSON.stringify(joystickData),
+                success: function(response) {
+                    console.log('Joystick data sent successfully:', response);
+                },
+                error: function(error) {
+                    console.error('Error sending joystick data:', error);
+                }
+            });
+        });
+
+        // Handle joystick end event
+        joystick.on('end', () => {
+            $('#joystick-data').text('Joystick Data: Not Active');
+        });
+
+        let previousSliderValue = 50;
+
+        let timeoutId;
+
+        function updateSliderValue(value) {
+            if (value !== previousSliderValue) {
+                $("#sliderValue").text("Slider Value: " + value);
+
+                // Clear the previous timeout if it exists
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                }
+
+                // Set a new timeout to send the request after 500 milliseconds
+                timeoutId = setTimeout(() => {
+                    // You can send the value to the server if needed
+                    fetch(`/update_slider?value=${value}`)
+                        .then(response => {
+                            if (response.ok) {
+                                console.log(`Slider value ${value} sent successfully.`);
+                                previousSliderValue = value;
+                            } else {
+                                console.error(`Failed to send slider value ${value}.`);
+                            }
+                        });
+                }, 500);
+            }
+        }
+
+        function runFunctionTwo() {
+            fetch('/run_function_two')
+                .then(response => response.text())
+                .then(result => alert(result));
+        }
+    </script>
+</body>
+</html>
