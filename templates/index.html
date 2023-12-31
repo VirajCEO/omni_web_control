@@ -77,7 +77,6 @@
         joystick.on('move', (evt, data) => {
             isJoystickActive = true;
             const joystickData = {
-                angle: data.angle.degree,
                 direction: data.direction.angle,
                 distance: data.distance
             };
