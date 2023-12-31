@@ -17,8 +17,8 @@ in3 = 17
 in4 = 27
 en2 = 22
 in5 = 16
-in6 = 20
-en3 = 21
+in6 = 13
+en3 = 29
 
 start_speed=80
 turn_speed=80
