@@ -58,43 +58,43 @@ p2.start(start_speed)
 
 def CarForward(*args):
     print("forward")
-    p.ChangeDutyCycle(start_speed)
-    p1.ChangeDutyCycle(start_speed)
-    GPIO.output(in1,GPIO.HIGH)
+    GPIO.output(in1,GPIO.LOW)
     GPIO.output(in2,GPIO.LOW)
     GPIO.output(in3,GPIO.HIGH)
     GPIO.output(in4,GPIO.LOW)   
+    GPIO.output(in5,GPIO.LOW)
+    GPIO.output(in6,GPIO.HIGH)
 
 def CarRight(*args):
     print("right")
-    p.ChangeDutyCycle(turn_speed)
-    p1.ChangeDutyCycle(turn_speed)
-    GPIO.output(in1,GPIO.HIGH)
-    GPIO.output(in2,GPIO.LOW)
+    GPIO.output(in1,GPIO.LOW)
+    GPIO.output(in2,GPIO.HIGH)
     GPIO.output(in3,GPIO.LOW)
     GPIO.output(in4,GPIO.HIGH)
+    GPIO.output(in5,GPIO.LOW)
+    GPIO.output(in6,GPIO.HIGH)
     sleep(turn_ancle)
  
 
 def CarLeft(*args):
     print("left")
-    p.ChangeDutyCycle(turn_speed)
-    p1.ChangeDutyCycle(turn_speed)
-    GPIO.output(in1,GPIO.LOW)
-    GPIO.output(in2,GPIO.HIGH)
+    GPIO.output(in1,GPIO.HIGH)
+    GPIO.output(in2,GPIO.LOW)
     GPIO.output(in3,GPIO.HIGH)
     GPIO.output(in4,GPIO.LOW)
+    GPIO.output(in5,GPIO.HIGH)
+    GPIO.output(in6,GPIO.LOW)
     sleep(turn_ancle)
 
 
 def CarBack(*args):
     print("back")
-    p.ChangeDutyCycle(start_speed)
-    p1.ChangeDutyCycle(start_speed)
     GPIO.output(in1,GPIO.LOW)
-    GPIO.output(in2,GPIO.HIGH)
+    GPIO.output(in2,GPIO.LOW)
     GPIO.output(in3,GPIO.LOW)
     GPIO.output(in4,GPIO.HIGH)  
+    GPIO.output(in5,GPIO.HIGH)
+    GPIO.output(in6,GPIO.LOW)
 
 def CarStop(*args):
     print("stop")
@@ -102,6 +102,8 @@ def CarStop(*args):
     GPIO.output(in2,GPIO.LOW)
     GPIO.output(in3, GPIO.LOW)
     GPIO.output(in4,GPIO.LOW)
+    GPIO.output(in5,GPIO.LOW)
+    GPIO.output(in6,GPIO.LOW)
 
     
 def CarSpeed(*args):
@@ -110,19 +112,17 @@ def CarSpeed(*args):
     start_speed=float(args[0])
     print(start_speed)
 
-def IncreaseSpeed():
-    global start_speed
-    start_speed = min(start_speed + 10, 100)
-    print("Increased Speed:", start_speed)
-    p.ChangeDutyCycle(start_speed)
-    p1.ChangeDutyCycle(start_speed)
+def setspeed1(speed):
+    p.ChangeDutyCycle(speed)
+
+
+def setspeed2(speed):
+    p1.ChangeDutyCycle(speed)
     
-def DecreaseSpeed():
-    global start_speed
-    start_speed = max(start_speed - 10, 0)
-    print("Decreased Speed:", start_speed)
-    p.ChangeDutyCycle(start_speed)
-    p1.ChangeDutyCycle(start_speed)
+
+def setspeed3(speed):
+    p2.ChangeDutyCycle(speed)
+
 
 def SystemEnd(*args):
     GPIO.cleanup()

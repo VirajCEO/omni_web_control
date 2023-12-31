@@ -10,18 +10,26 @@
     <script src="https://unpkg.com/nipplejs@^0.9.1"></script>
 </head>
 <body>
-    <img src="{{ url_for('video_feed') }}" width="640" height="480">
+    <div id="video-container">
+        <img id="video-feed" src="{{ url_for('video_feed') }}" alt="Video Feed">
+    </div>
+    
     <div class="container">
-        
         <div id="joystick-container" class="mt-4"></div>
-        <p id="joystick-data" class="mt-2">Joystick Data: Not Active</p>
-
+        <div class="sliders">
         <div class="form-group mt-4">
-            <label for="valueSlider">Speed:</label>
+            <label for="valueSlider">Speed1:</label>
             <input type="range" class="form-control-range" id="valueSlider" orient="horizontal" min="1" max="100" step="1" value="50" oninput="updateSliderValue(this.value)">
         </div>
-
-        <button class="btn btn-primary mt-3" onclick="runFunctionTwo()"><i class="bi bi-play"></i> Run Function Two</button>
+        <div class="form-group mt-4">
+            <label for="valueSlider">Speed2:</label>
+            <input type="range" class="form-control-range" id="valueSlider" orient="horizontal" min="1" max="100" step="1" value="50" oninput="updateSliderValue2(this.value)">
+        </div>
+        <div class="form-group mt-4">
+            <label for="valueSlider">Speed3:</label>
+            <input type="range" class="form-control-range" id="valueSlider" orient="horizontal" min="1" max="100" step="1" value="50" oninput="updateSliderValue3(this.value)">
+        </div>
+    </div>
     </div>
 
     <script>
@@ -32,53 +40,101 @@
             position: { top: '50%', left: '50%' },
             color: 'blue'
         });
-
+    
         // Handle joystick events
+        let joystickTimeoutId;
+        let isJoystickActive = false;
+
+        // Use a setInterval to periodically check joystick status
+        setInterval(() => {
+            if (!isJoystickActive) {
+                // Joystick is not active
+                $('#joystick-data').text('Joystick Data: Not Active');
+                console.log("Joystick inactive");
+
+                joystickTimeoutId = setTimeout(() => {
+                // Send live data to the server (you can modify this as needed)
+                $.ajax({
+                    type: 'POST',
+                    url: '/joystick_data',
+                    contentType: 'application/json;charset=UTF-8',
+                    data: JSON.stringify("Not"),
+                    success: function(response) {
+                        console.log('Joystick data sent successfully:', response);
+                    },
+                    error: function(error) {
+                        console.error('Error sending joystick data:', error);
+                    }
+                });
+            }, 600);
+            }
+            
+            // Reset the status for the next interval
+            
+        }, 1000);  // A
+
+
         joystick.on('move', (evt, data) => {
+            isJoystickActive = true;
             const joystickData = {
                 angle: data.angle.degree,
                 direction: data.direction.angle,
                 distance: data.distance
             };
-
+    
             // Update the display
             $('#joystick-data').text(`Joystick Data: ${JSON.stringify(joystickData)}`);
-
-            // Send live data to the server (you can modify this as needed)
-            $.ajax({
-                type: 'POST',
-                url: '/joystick_data',
-                contentType: 'application/json;charset=UTF-8',
-                data: JSON.stringify(joystickData),
-                success: function(response) {
-                    console.log('Joystick data sent successfully:', response);
-                },
-                error: function(error) {
-                    console.error('Error sending joystick data:', error);
-                }
-            });
+    
+            // Clear the previous timeout if it exists
+            if (joystickTimeoutId) {
+                clearTimeout(joystickTimeoutId);
+            }
+    
+            // Set a new timeout to send the request after 500 milliseconds
+            joystickTimeoutId = setTimeout(() => {
+                // Send live data to the server (you can modify this as needed)
+                $.ajax({
+                    type: 'POST',
+                    url: '/joystick_data',
+                    contentType: 'application/json;charset=UTF-8',
+                    data: JSON.stringify(joystickData),
+                    success: function(response) {
+                        console.log('Joystick data sent successfully:', response);
+                    },
+                    error: function(error) {
+                        console.error('Error sending joystick data:', error);
+                    }
+                });
+            }, 100);
+    
+            // Clear the feedback message when joystick is active
+            $('#joystick-feedback').text('');
         });
-
+    
         // Handle joystick end event
         joystick.on('end', () => {
             $('#joystick-data').text('Joystick Data: Not Active');
+            isJoystickActive = false;
+            // Provide feedback when joystick is not active
+            $('#joystick-feedback').text('Joystick is not active. Please move to activate.');
+
         });
-
+    
         let previousSliderValue = 50;
-
-        let timeoutId;
-
+    
+        let sliderTimeoutId;
+    
         function updateSliderValue(value) {
             if (value !== previousSliderValue) {
                 $("#sliderValue").text("Slider Value: " + value);
-
+    
                 // Clear the previous timeout if it exists
-                if (timeoutId) {
-                    clearTimeout(timeoutId);
+                if (sliderTimeoutId) {
+                    clearTimeout(sliderTimeoutId);
                 }
-
+    
                 // Set a new timeout to send the request after 500 milliseconds
-                timeoutId = setTimeout(() => {
+                sliderTimeoutId = setTimeout(() => {
                     // You can send the value to the server if needed
                     fetch(`/update_slider?value=${value}`)
                         .then(response => {
@@ -92,12 +148,64 @@
                 }, 500);
             }
         }
+    
+        function updateSliderValue2(value) {
+            if (value !== previousSliderValue) {
+                $("#sliderValue").text("Slider Value: " + value);
+    
+                // Clear the previous timeout if it exists
+                if (sliderTimeoutId) {
+                    clearTimeout(sliderTimeoutId);
+                }
+    
+                // Set a new timeout to send the request after 500 milliseconds
+                sliderTimeoutId = setTimeout(() => {
+                    // You can send the value to the server if needed
+                    fetch(`/update_slider2?value=${value}`)
+                        .then(response => {
+                            if (response.ok) {
+                                console.log(`Slider value ${value} sent successfully.`);
+                                previousSliderValue = value;
+                            } else {
+                                console.error(`Failed to send slider value ${value}.`);
+                            }
+                        });
+                }, 500);
+            }
+        }
 
+        function updateSliderValue3(value) {
+            if (value !== previousSliderValue) {
+                $("#sliderValue").text("Slider Value: " + value);
+    
+                // Clear the previous timeout if it exists
+                if (sliderTimeoutId) {
+                    clearTimeout(sliderTimeoutId);
+                }
+    
+                // Set a new timeout to send the request after 500 milliseconds
+                sliderTimeoutId = setTimeout(() => {
+                    // You can send the value to the server if needed
+                    fetch(`/update_slider3?value=${value}`)
+                        .then(response => {
+                            if (response.ok) {
+                                console.log(`Slider value ${value} sent successfully.`);
+                                previousSliderValue = value;
+                            } else {
+                                console.error(`Failed to send slider value ${value}.`);
+                            }
+                        });
+                }, 500);
+            }
+        }
+            
+            
         function runFunctionTwo() {
             fetch('/run_function_two')
                 .then(response => response.text())
                 .then(result => alert(result));
         }
     </script>
-</body>
-</html>
+    </body>
+    </html>
+    
