@@ -75,41 +75,46 @@
 
 
         joystick.on('move', (evt, data) => {
-            isJoystickActive = true;
-            const joystickData = {
-                direction: data.direction.angle,
-                distance: data.distance
-            };
-    
-            // Update the display
-            $('#joystick-data').text(`Joystick Data: ${JSON.stringify(joystickData)}`);
-    
-            // Clear the previous timeout if it exists
-            if (joystickTimeoutId) {
-                clearTimeout(joystickTimeoutId);
-            }
-    
-            // Set a new timeout to send the request after 500 milliseconds
-            joystickTimeoutId = setTimeout(() => {
-                // Send live data to the server (you can modify this as needed)
-                $.ajax({
-                    type: 'POST',
-                    url: '/joystick_data',
-                    contentType: 'application/json;charset=UTF-8',
-                    data: JSON.stringify(joystickData),
-                    success: function(response) {
-                        console.log('Joystick data sent successfully:', response);
-                    },
-                    error: function(error) {
-                        console.error('Error sending joystick data:', error);
+                isJoystickActive = true;
+
+                // Check if 'angle' property exists in the data object
+                if (data && data.angle && data.angle.degree &&data.direction.angle) {
+                    const joystickData = {
+                        angle: data.angle.degree,
+                        direction: data.direction.angle,
+                        distance: data.distance
+                    };
+
+                    // Update the display
+                    $('#joystick-data').text(`Joystick Data: ${JSON.stringify(joystickData)}`);
+
+                    // Clear the previous timeout if it exists
+                    if (joystickTimeoutId) {
+                        clearTimeout(joystickTimeoutId);
                     }
-                });
-            }, 100);
-    
-            // Clear the feedback message when joystick is active
-            $('#joystick-feedback').text('');
-        });
-    
+
+                    // Set a new timeout to send the request after 500 milliseconds
+                    joystickTimeoutId = setTimeout(() => {
+                        // Send live data to the server (you can modify this as needed)
+                        $.ajax({
+                            type: 'POST',
+                            url: '/joystick_data',
+                            contentType: 'application/json;charset=UTF-8',
+                            data: JSON.stringify(joystickData),
+                            success: function(response) {
+                                console.log('Joystick data sent successfully:', response);
+                            },
+                            error: function(error) {
+                                console.error('Error sending joystick data:', error);
+                            }
+                        });
+                    }, 100);
+                } else {
+                    console.error('Error: The "angle" property is undefined in the joystick data.');
+                }
+
+                // Clear the feedback message
+            });
         // Handle joystick end event
         joystick.on('end', () => {
             $('#joystick-data').text('Joystick Data: Not Active');
